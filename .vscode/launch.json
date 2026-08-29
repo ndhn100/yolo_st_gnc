@@ -1,0 +1,52 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Demo: webcam",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/realtime_demo.py",
+            "args": ["--source", "0"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Demo: phát lại clip UP-Fall (ngã ra sau)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/realtime_demo.py",
+            "args": ["--source", "${workspaceFolder}/raw_data/Subject13Activity3Trial1Camera1.zip"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Demo: chọn file video/zip...",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/realtime_demo.py",
+            "args": ["--source", "${input:videoSource}"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Đánh giá trên tập test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/evaluate.py",
+            "args": ["--split", "test"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Huấn luyện lại ST-GCN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/train.py",
+            "console": "integratedTerminal"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "videoSource",
+            "type": "promptString",
+            "description": "Đường dẫn video/zip hoặc 0 (webcam)",
+            "default": "0"
+        }
+    ]
+}
