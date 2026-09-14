@@ -1,11 +1,5 @@
-"""Mô hình ST-GCN (Spatial-Temporal Graph Convolutional Network).
 
-Tham khảo: Yan S., Xiong Y., Lin D., "Spatial Temporal Graph Convolutional
-Networks for Skeleton-Based Action Recognition", AAAI 2018.
 
-Đầu vào:  x (N, C=3, T=32, V=17)  — chuỗi khung xương đã chuẩn hóa
-Đầu ra:   logits (N, num_classes)
-"""
 import torch
 import torch.nn as nn
 
@@ -14,15 +8,13 @@ from graph import Graph
 
 
 class SpatialGraphConv(nn.Module):
-    """Tích chập đồ thị không gian: x_out = sum_k( W_k(x) @ A_k )."""
 
     def __init__(self, in_channels, out_channels, kernel_size):
         super().__init__()
-        self.kernel_size = kernel_size  # số partition K (=3 với spatial strategy)
+        self.kernel_size = kernel_size
         self.conv = nn.Conv2d(in_channels, out_channels * kernel_size, kernel_size=1)
 
     def forward(self, x, A):
-        # x: (N, C, T, V), A: (K, V, V)
         x = self.conv(x)
         n, kc, t, v = x.size()
         x = x.view(n, self.kernel_size, kc // self.kernel_size, t, v)
@@ -31,7 +23,6 @@ class SpatialGraphConv(nn.Module):
 
 
 class STGCNBlock(nn.Module):
-    """1 block ST-GCN = GCN không gian + TCN thời gian + residual."""
 
     def __init__(self, in_channels, out_channels, A_size, temporal_kernel=9,
                  stride=1, dropout=0.5, residual=True):
@@ -61,7 +52,6 @@ class STGCNBlock(nn.Module):
             )
         self.relu = nn.ReLU(inplace=True)
 
-        # Trọng số "edge importance": học mức quan trọng của từng cạnh đồ thị
         self.edge_importance = nn.Parameter(torch.ones(A_size))
 
     def forward(self, x, A):
@@ -76,14 +66,13 @@ class STGCN(nn.Module):
                  dropout=DROPOUT):
         super().__init__()
         graph = Graph()
-        A = torch.tensor(graph.A, dtype=torch.float32)  # (3, V, V)
+        A = torch.tensor(graph.A, dtype=torch.float32)
         self.register_buffer("A", A)
         self.num_joints = graph.num_nodes
 
         self.data_bn = nn.BatchNorm1d(in_channels * self.num_joints)
 
         cfg = [
-            # (in, out, stride)
             (in_channels, 64, 1),
             (64, 64, 1),
             (64, 64, 1),
@@ -101,7 +90,6 @@ class STGCN(nn.Module):
         self.head = nn.Linear(256, num_classes)
 
     def forward(self, x):
-        # x: (N, C, T, V)
         n, c, t, v = x.size()
         x = x.permute(0, 3, 1, 2).contiguous().view(n, v * c, t)
         x = self.data_bn(x)
@@ -110,7 +98,7 @@ class STGCN(nn.Module):
         for block in self.blocks:
             x = block(x, self.A)
 
-        x = x.mean(dim=[2, 3])  # global average pooling (T, V)
+        x = x.mean(dim=[2, 3])
         return self.head(x)
 
 

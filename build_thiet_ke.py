@@ -106,7 +106,6 @@ def table(headers, rows, widths=None):
 def caption(text):
     q=doc.add_paragraph(); q.alignment=WD_ALIGN_PARAGRAPH.CENTER; q.paragraph_format.space_after=Pt(7); r=q.add_run(text); set_font(r,9,False,'555555',True)
 
-# Cover
 for _ in range(3): p('')
 for line,size,bold in [('TRƯỜNG ĐẠI HỌC MỞ THÀNH PHỐ HỒ CHÍ MINH',13,True),('KHOA ĐÀO TẠO ĐẶC BIỆT',13,True),('',12,False),('ĐỒ ÁN NGÀNH',16,True),('BÁO CÁO GIAI ĐOẠN 4',16,True),('',12,False),('THIẾT KẾ HỆ THỐNG',22,True),('HỆ THỐNG PHÁT HIỆN TÉ NGÃ Ở NGƯỜI CAO TUỔI',17,True),('Dựa trên camera, YOLOv8n-Pose và ST-GCN',12,False)]:
     q=p('',align=WD_ALIGN_PARAGRAPH.CENTER); q.paragraph_format.space_after=Pt(5); r=q.add_run(line); set_font(r,size,bold,BLUE if size>=17 else DARK)

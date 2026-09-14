@@ -1,20 +1,7 @@
-"""Bước 5: Demo phát hiện té ngã THỜI GIAN THỰC.
 
-Pipeline: nguồn video → YOLO-Pose (khung xương) → bộ đệm 32 khung hình
-→ ST-GCN (xác suất té ngã) → làm mượt → CẢNH BÁO (banner đỏ + beep +
-lưu ảnh bằng chứng vào fall_alerts/).
 
-Nguồn video (--source):
-    0                       : webcam
-    duong/dan/video.mp4     : file video
-    duong/dan/SubjectXActivityYTrialZCamera1.zip : phát lại clip UP-Fall
 
-Ví dụ:
-    python src/realtime_demo.py --source 0
-    python src/realtime_demo.py --source "C:/.../Subject9Activity3Trial1Camera1.zip"
 
-Nhấn Q để thoát.
-"""
 import argparse
 import collections
 import threading
@@ -38,7 +25,6 @@ from stgcn import STGCN
 
 
 def frame_generator(source):
-    """Sinh khung hình BGR từ webcam / video / zip ảnh UP-Fall."""
     if str(source).lower().endswith(".zip"):
         with zipfile.ZipFile(source) as zf:
             names = sorted(n for n in zf.namelist() if n.lower().endswith(".png"))
@@ -47,7 +33,7 @@ def frame_generator(source):
                 img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
                 if img is not None:
                     yield img
-                time.sleep(1 / 18)  # mô phỏng tốc độ ~18fps của UP-Fall
+                time.sleep(1 / 18)
     else:
         cap = cv2.VideoCapture(int(source) if str(source).isdigit() else source)
         if not cap.isOpened():
@@ -119,9 +105,8 @@ def main():
         buffer.append(kpts)
         draw_skeleton(frame, kpts)
 
-        # Suy luận ST-GCN mỗi RT_PRED_STRIDE khung hình khi buffer đầy
         if len(buffer) == WINDOW_SIZE and frame_id % RT_PRED_STRIDE == 0:
-            window = np.stack(buffer)  # (T,17,3)
+            window = np.stack(buffer)
             if (window[:, :, 2] > 0.3).any():
                 norm = normalize_window(interpolate_missing(window))
                 x = torch.from_numpy(window_to_tensor_layout(norm)).unsqueeze(0).to(device)
@@ -136,7 +121,6 @@ def main():
                     cv2.imwrite(str(out), frame)
                     print(f"[CẢNH BÁO] Phát hiện té ngã! p={fall_prob:.2f} → {out}")
 
-        # ---- Vẽ giao diện ----
         h, w = frame.shape[:2]
         bar_w = int(200 * fall_prob)
         color = (0, 0, 255) if fall_prob >= args.threshold else (0, 200, 0)

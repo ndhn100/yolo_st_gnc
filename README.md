@@ -161,3 +161,83 @@ Hai bài học quan trọng rút ra trong quá trình thực nghiệm (nên đư
 - Martínez-Villaseñor L. et al. (2019). *UP-Fall Detection Dataset: A
   Multimodal Approach*. Sensors 19(9).
 - Ultralytics YOLOv8 Pose: https://docs.ultralytics.com/tasks/pose/
+
+## 9. Giao diện tải video lên
+
+Giao diện **FallSense** chạy tại **http://127.0.0.1:8000** trên máy có mô hình.
+Tải một video, chọn **Phân tích video**, rồi xem kết luận, biểu đồ điểm té ngã,
+các mốc thời gian và ảnh khung xương minh chứng. Nhấn một mốc để xem lại video.
+
+```powershell
+# Cài thêm thư viện web vào môi trường hiện có (chỉ cần làm một lần)
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Khởi động giao diện và bộ xử lý video; giữ cửa sổ này mở
+.\venv\Scripts\python.exe src\web_app.py
+
+# Hoặc dùng trình khởi động PowerShell
+.\start_frontend.ps1
+```
+
+Mở địa chỉ trên bằng trình duyệt. Nếu cổng 8000 đã được dùng, chạy
+`python src\web_app.py --port 8001` trong môi trường đã kích hoạt.
+Nhấn Ctrl+C trong cửa sổ chạy máy chủ để dừng.
+
+### Camera trực tiếp
+
+Nhấn **Bật camera** ở đầu trang để mở webcam mặc định của máy chạy ứng dụng.
+Giữ người trong khung hình, nên thấy rõ toàn thân. Sau khoảng 2 giây thu thập
+chuyển động, giao diện hiển thị **Không phát hiện té ngã** hoặc cảnh báo đỏ
+**PHÁT HIỆN TÉ NGÃ!** kèm tiếng báo. Cảnh báo được giữ khoảng 3 giây để dễ
+nhận biết; một cửa sổ đạt ngưỡng 0,85 là đủ kích hoạt, không yêu cầu hai lần.
+
+Nhấn **Tắt tiếng báo** nếu muốn chỉ xem cảnh báo hình ảnh và **Tắt camera**
+để ngừng theo dõi. Khi chưa thấy rõ người hoặc chưa đủ dữ liệu, camera hiện
+trạng thái chờ thay vì kết luận không té ngã. Không cần huấn luyện lại:
+camera dùng chính `best.pt` đang nạp, YOLO và cách chuẩn hóa như video tải lên.
+
+Camera được xử lý trên máy chủ cục bộ, hình ảnh và khung xương chỉ nằm trong
+bộ nhớ. Tắt camera sẽ giải phóng thiết bị; nếu đóng trang hoặc mất kết nối,
+camera tự dừng sau tối đa khoảng 15 giây không nhận được tín hiệu từ trang.
+Trong lúc camera hoạt động, phần tải video được tạm khóa để tránh chạy hai
+nguồn đồng thời trên cùng mô hình. Nếu mở camera thất bại, đóng ứng dụng
+khác đang dùng webcam và kiểm tra quyền Camera của Windows cho ứng dụng desktop.
+
+Phần trực tiếp nằm trong `src/live_camera.py` và `web/camera.js`.
+
+- **Trọng số:** YOLO dùng `yolov8n-pose.pt`; ST-GCN dùng
+  `checkpoints/best.pt`, không dùng `last.pt`. Checkpoint hiện tại ở epoch 16,
+  F1 validation = 0,993377. Quy tắc trong `train.py` chọn F1 validation cao
+  nhất; khi bằng nhau, chọn validation loss thấp hơn. Giao diện đọc thông tin
+  trực tiếp từ checkpoint đang nạp. F1 validation không phải độ tin cậy của
+  từng video.
+- **Cách đọc kết quả:** chỉ số chính là số sự kiện đủ điều kiện xác nhận.
+  Mở **Xem điểm mô hình theo từng đoạn** để xem điểm thô trên thang 0–100,
+  số đoạn vượt ngưỡng và tua đến đoạn đạt điểm cao nhất. Điểm cực đại của
+  một đoạn không phải xác suất té ngã của cả video; một đoạn ngồi/xổm cũng
+  có thể bị mô hình cho điểm cao. Theo cấu hình hiện tại, chỉ một đoạn
+  đạt ngưỡng cũng được đánh dấu; trọng số mô hình giữ nguyên.
+- **Xử lý thật trên máy:** video → theo dõi một người chính → khung xương
+  COCO-17 → lấy mẫu về 18 FPS → chuẩn hóa như pipeline suy luận hiện có →
+  ST-GCN. Dùng CUDA nếu có, nếu không dùng CPU. Không cần tải trọng số qua mạng.
+- **Kết luận trên giao diện web:** đánh dấu té ngã khi có ít nhất một cửa sổ
+  đạt điểm ≥ 0,85 (32 khung/cửa sổ, bước 4). Giữ kết quả phát hiện dù người đứng
+  dậy ở cuối video. Video quá ngắn, không thấy rõ người hoặc thiếu dữ liệu
+  trả về **Chưa đủ dữ liệu để kết luận**. Kết quả áp dụng cho người chính
+  được theo dõi, chưa phải phân tích đồng thời mọi người trong cảnh.
+- **Video đầu vào:** MP4, MOV, AVI, MKV, WebM, M4V; tối đa 250 MB và 10 phút.
+  Nên thấy rõ toàn thân trong ít nhất 2 giây. Khả năng phát xem trước phụ
+  thuộc codec của trình duyệt; lỗi xem trước không ngăn mô hình thử đọc tệp.
+- **Lưu tạm:** video nguồn được xóa sau xử lý; ảnh minh chứng được lưu trong
+  `web_uploads/` đến khi đổi video/xóa kết quả, tự dọn sau khoảng một giờ,
+  hoặc khi vượt giới hạn 12 lượt lưu. Các tệp này được loại khỏi Git.
+  Máy chủ chỉ lắng nghe trên máy hiện tại.
+
+Các thành phần mới: `web/` chứa giao diện; `src/web_app.py` phục vụ trang và
+quản lý tác vụ nền; `src/video_inference.py` chạy mô hình, tạo kết luận và
+minh chứng. Mỗi lần chỉ một tác vụ chạy mô hình để dùng GPU ổn định.
+
+```powershell
+# Kiểm tra API và các trường hợp suy luận, không cần tải mô hình để chạy test
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
+```

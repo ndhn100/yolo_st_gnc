@@ -1,16 +1,6 @@
-"""Bước 1: Trích xuất khung xương bằng YOLO-Pose từ các file zip UP-Fall.
 
-Đọc trực tiếp khung hình PNG từ trong zip (không cần giải nén ra đĩa),
-chạy YOLO-Pose theo batch trên GPU, chọn người có confidence cao nhất
-(UP-Fall chỉ có 1 người/khung hình), lưu kết quả mỗi trial thành 1 file npz:
 
-    data/keypoints/Subject{S}Activity{A}Trial{T}.npz
-        kpts   : (T, 17, 3) float32 — x, y (pixel), confidence
-        fps    : float — ước lượng từ timestamp trong tên file ảnh
-        width, height, subject, activity, trial
 
-Chạy:  python src/extract_keypoints.py [--raw-dir ...] [--limit N]
-"""
 import argparse
 import re
 import zipfile
@@ -32,7 +22,6 @@ TS_RE = re.compile(r"(\d{4}-\d{2}-\d{2})T(\d{2})_(\d{2})_(\d{2}(?:\.\d+)?)")
 
 
 def parse_timestamp(name):
-    """'2018-07-04T12_04_17.738369.png' → giây (float) hoặc None."""
     m = TS_RE.search(name)
     if not m:
         return None
@@ -45,7 +34,7 @@ def estimate_fps(names):
     ts = [parse_timestamp(n) for n in names]
     ts = [t for t in ts if t is not None]
     if len(ts) < 2:
-        return 18.0  # mặc định của UP-Fall
+        return 18.0
     dts = np.diff(sorted(ts))
     dts = dts[(dts > 1e-4) & (dts < 1.0)]
     return float(1.0 / np.median(dts)) if len(dts) else 18.0
@@ -67,7 +56,7 @@ def process_zip(zip_path, model, device):
             for n in batch_names:
                 buf = np.frombuffer(zf.read(n), dtype=np.uint8)
                 img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
-                if img is None:  # ảnh hỏng → khung đen cùng kích thước
+                if img is None:
                     img = np.zeros((height or 480, width or 640, 3), np.uint8)
                 height, width = img.shape[:2]
                 frames.append(img)

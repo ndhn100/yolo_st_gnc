@@ -1,16 +1,5 @@
-"""Bước 3: Huấn luyện ST-GCN phân loại Té ngã / Không té ngã.
 
-- Train trên data/dataset_goc.npz (khớp che ghim về gốc) — evaluate.py và demo
-  chạy trên bản mirror-fill. Cấu hình bất đối xứng này là kết quả tốt nhất đã
-  kiểm chứng (test F1 té ngã 0,876, seed 42 tái lập được); train thẳng trên
-  mirror-fill làm mô hình học shortcut mới, F1 tụt còn ~0,74.
-- Loss: CrossEntropy có trọng số lớp (bù mất cân bằng té ngã << không té).
-- Optimizer: AdamW + warmup 5 epoch + cosine annealing.
-- Lưu checkpoint tốt nhất theo F1 (lớp té ngã) trên tập validation.
-- Early stopping.
 
-Chạy:  python src/train.py [--epochs 70] [--batch-size 64] [--lr 1e-3]
-"""
 import argparse
 import csv
 import math
@@ -35,8 +24,6 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # cuDNN mặc định chọn thuật toán không tất định → mỗi lần train ra kết
-    # quả hơi khác nhau dù đã cố định seed. Bật 2 cờ này để tái lập được.
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -87,7 +74,6 @@ def main():
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
                             num_workers=0, pin_memory=(device == "cuda"))
 
-    # Trọng số lớp: w_c = N / (num_classes * N_c)
     counts = np.bincount(d["y_train"], minlength=NUM_CLASSES).astype(np.float64)
     class_weights = torch.tensor(len(d["y_train"]) / (NUM_CLASSES * counts),
                                  dtype=torch.float32, device=device)
@@ -138,8 +124,6 @@ def main():
         history.append([epoch + 1, train_loss, train_acc, val_loss, val_acc,
                         val_prec, val_rec, val_f1])
         marker = ""
-        # Chọn best theo val F1; nếu F1 hòa nhau thì lấy epoch có val loss
-        # thấp hơn (thường tổng quát hóa tốt hơn epoch sớm cùng F1).
         improved = (val_f1 > best_f1 + 1e-6) or (
             abs(val_f1 - best_f1) <= 1e-6 and val_loss < best_val_loss)
         if improved:
@@ -166,7 +150,6 @@ def main():
                          "val_acc", "val_precision", "val_recall", "val_f1"])
         writer.writerows(history)
 
-    # Vẽ đường cong huấn luyện
     try:
         import matplotlib
         matplotlib.use("Agg")

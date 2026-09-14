@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Sinh báo cáo Giai đoạn 3 — PHÂN TÍCH HỆ THỐNG (docx).
-
-Chạy:  venv\\Scripts\\python.exe scripts\\tao_phan_tich.py
-Kết quả: docs/PhanTichHeThong_PhatHienTeNga.docx
-"""
 import sys
 from pathlib import Path
 
@@ -29,7 +23,6 @@ BLACK = RGBColor(0x00, 0x00, 0x00)
 
 doc = Document()
 
-# --------------------------------------------------------------- thiết lập trang
 sec = doc.sections[0]
 sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
 sec.top_margin, sec.bottom_margin = Cm(2.0), Cm(2.0)
@@ -74,7 +67,6 @@ def para(text="", size=13, bold=False, italic=False, align="justify",
     return p
 
 
-# Đặt True nếu muốn mỗi PHẦN bắt đầu ở một trang mới (báo cáo dài thêm ~5 trang).
 PAGE_BREAK_PARTS = False
 
 
@@ -247,9 +239,6 @@ def footer_page_number():
             run._r.append(f)
 
 
-# =============================================================================
-# TRANG BÌA
-# =============================================================================
 para("TRƯỜNG ĐẠI HỌC MỞ THÀNH PHỐ HỒ CHÍ MINH", 13, True, align="center", space_after=2)
 para("KHOA ĐÀO TẠO ĐẶC BIỆT", 13, True, align="center", space_after=60)
 para("ĐỒ ÁN NGÀNH", 15, True, align="center", color=NAVY, space_after=4)
@@ -263,9 +252,6 @@ para("Giảng viên hướng dẫn: TS. Nguyễn Tiến Đạt", 13, align="cent
 para("Học kỳ 3 – Năm học 2025–2026", 13, align="center", space_after=40)
 para("Thành phố Hồ Chí Minh – 2026", 13, align="center")
 
-# =============================================================================
-# MỤC LỤC
-# =============================================================================
 doc.add_page_break()
 h1("MỤC LỤC")
 muc_luc = [
@@ -328,9 +314,6 @@ for text, is_bold in muc_luc:
          indent=0 if is_bold else 0.7, space_after=0,
          space_before=2 if is_bold else 0)
 
-# =============================================================================
-# PHẦN MỞ ĐẦU
-# =============================================================================
 doc.add_page_break()
 h1("PHẦN MỞ ĐẦU")
 
@@ -419,9 +402,6 @@ para("Số liệu thực nghiệm trong Phần V lấy từ thử nghiệm tiề
      "định. Đây là dữ liệu diễn xuất trong phòng thí nghiệm: có giá trị định hướng lựa "
      "chọn mô hình nhưng không thay thế thử nghiệm tại nhà thật.")
 
-# =============================================================================
-# PHẦN I
-# =============================================================================
 h1("PHẦN I. PHÂN TÍCH YÊU CẦU HỆ THỐNG")
 
 h2("1.1. Sơ đồ ngữ cảnh và phạm vi hệ thống")
@@ -554,9 +534,6 @@ bullet("Dữ liệu huấn luyện giai đoạn này là dữ liệu diễn xu�
 bullet("Người cao tuổi không bị yêu cầu đeo hay sạc thiết bị; nút gọi trợ giúp (nếu có) "
        "chỉ là kênh bổ sung, không phải điều kiện để hệ thống hoạt động.")
 
-# =============================================================================
-# PHẦN II
-# =============================================================================
 h1("PHẦN II. MÔ HÌNH USE CASE")
 
 h2("2.1. Sơ đồ use case tổng thể")
@@ -727,9 +704,6 @@ table(
     ],
     widths=[2.6, 7.0, 3.4], fs=9.5, first_col_bold=True)
 
-# =============================================================================
-# PHẦN III
-# =============================================================================
 h1("PHẦN III. MÔ HÌNH XỬ LÝ")
 
 h2("3.1. Quy trình giám sát và phát hiện")
@@ -807,9 +781,6 @@ para("Nguyên tắc chung xuyên suốt bảng trên: mọi khoảng thời gian
      "tin cậy hoàn toàn đều phải có thời điểm bắt đầu và thời điểm kết thúc trong nhật "
      "ký, để sau này người dùng biết được khoảng nào không nên tin vào cơ chế tự động.")
 
-# =============================================================================
-# PHẦN IV
-# =============================================================================
 h1("PHẦN IV. MÔ HÌNH DỮ LIỆU")
 
 h2("4.1. Sơ đồ lớp mức phân tích")
@@ -967,9 +938,6 @@ table(
     ],
     widths=[2.6, 2.8, 3.4, 3.2], fs=9.5, first_col_bold=True)
 
-# =============================================================================
-# PHẦN V
-# =============================================================================
 h1("PHẦN V. PHÂN TÍCH BÀI TOÁN DỮ LIỆU VÀ LỰA CHỌN MÔ HÌNH")
 
 h2("5.1. Phát biểu bài toán học máy")
@@ -1337,9 +1305,6 @@ para("Ràng buộc bắt buộc: chuỗi tiền xử lý lúc huấn luyện và
      "bước Thiết kế, ràng buộc này được bảo đảm bằng cách cho cả hai luồng dùng chung "
      "một mô-đun xử lý duy nhất.")
 
-# =============================================================================
-# PHẦN VI
-# =============================================================================
 h1("PHẦN VI. KIẾN TRÚC HỆ THỐNG MỨC PHÂN TÍCH")
 
 h2("6.1. Sơ đồ thành phần")
@@ -1386,9 +1351,6 @@ table(
     ],
     widths=[4.0, 4.5, 3.5], fs=9.5, first_col_bold=True)
 
-# =============================================================================
-# PHẦN VII
-# =============================================================================
 h1("PHẦN VII. MA TRẬN TRUY VẾT VÀ TIÊU CHÍ CHẤP NHẬN")
 
 h2("7.1. Ma trận truy vết")
@@ -1459,9 +1421,6 @@ table(
     ],
     widths=[4.2, 1.6, 6.2], fs=9.5, first_col_bold=True)
 
-# =============================================================================
-# PHẦN VIII
-# =============================================================================
 h1("PHẦN VIII. KẾT LUẬN VÀ CHUYỂN GIAO SANG GIAI ĐOẠN THIẾT KẾ")
 
 h2("8.1. Tóm tắt kết quả phân tích")
@@ -1522,9 +1481,6 @@ para("Sau bước Thiết kế, các sản phẩm ở cột bên phải sẽ đ�
      "công. Ở giai đoạn đó, báo cáo sẽ ghi nhận kết quả thực nghiệm thực tế và đối chiếu "
      "với các chỉ tiêu đã cam kết ở mục 1.4 và mục 5.8 của tài liệu này.")
 
-# =============================================================================
-# TÀI LIỆU THAM KHẢO
-# =============================================================================
 h1("TÀI LIỆU THAM KHẢO")
 for ref in [
     "[1] Nguyễn Đinh Hồng Ngọc. Khảo sát hiện trạng — Hệ thống phát hiện té ngã ở người "

@@ -7,3 +7,6 @@ checkpoints/
 fall_alerts/
 *.pt
 !yolov8n-pose.pt
+web_uploads/
+.web_runtime/
+tmp/

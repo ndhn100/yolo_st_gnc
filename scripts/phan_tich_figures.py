@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Sinh các hình minh hoạ cho báo cáo Phân tích hệ thống.
-
-Chạy:  venv\\Scripts\\python.exe scripts\\phan_tich_figures.py
-Kết quả: docs/assets_phantich/*.png
-"""
 import sys
 from pathlib import Path
 
@@ -79,7 +73,6 @@ def arrow(ax, p1, p2, color=NAVY, lw=1.6, style="-|>", ls="-", rad=0.0,
 
 def path(ax, pts, color=NAVY, lw=1.6, ls="-", head=True, text=None,
          text_at=None, fs=7.5, tcolor=None, z=6):
-    """Đường gấp khúc qua danh sách điểm, đầu mũi tên ở đoạn cuối."""
     xs = [p[0] for p in pts]
     ys = [p[1] for p in pts]
     ax.plot(xs[:-1] + [xs[-1]], ys[:-1] + [ys[-1]], color=color, lw=lw,
@@ -128,7 +121,6 @@ def save(fig, name):
     print("  ->", name)
 
 
-# ================================================================ H1 ngữ cảnh
 def fig_context():
     fig, ax = new_ax(11, 5.6)
     core = box(ax, 34, 34, 32, 26,
@@ -151,7 +143,6 @@ def fig_context():
     save(fig, "h01_ngu_canh.png")
 
 
-# ================================================================ H2 use case
 def fig_usecase():
     fig, ax = new_ax(11.5, 7.4)
     ax.add_patch(Rectangle((20, 3), 70, 94, fc="#FBFDFE", ec=NAVY, lw=2, zorder=0))
@@ -199,7 +190,6 @@ def fig_usecase():
     save(fig, "h02_use_case.png")
 
 
-# ======================================================== H3 hoạt động phát hiện
 def fig_act_detect():
     fig, ax = new_ax(7.4, 10.0, ylim=(0, 112))
     start_node(ax, 50, 4)
@@ -243,7 +233,6 @@ def fig_act_detect():
     save(fig, "h03_hoat_dong_phat_hien.png")
 
 
-# ======================================================= H4 xác nhận / leo thang
 def fig_act_escalate():
     fig, ax = new_ax(11, 7.2)
     lanes = [("Hệ thống", 0, 33), ("Người cao tuổi", 33, 27), ("Người nhận cảnh báo", 60, 40)]
@@ -290,7 +279,6 @@ def fig_act_escalate():
     save(fig, "h04_hoat_dong_leo_thang.png")
 
 
-# ==================================================== H5 máy trạng thái sự kiện
 def fig_state():
     fig, ax = new_ax(11, 5.4, ylim=(0, 106))
     start_node(ax, 3, 33)
@@ -320,7 +308,6 @@ def fig_state():
     save(fig, "h05_trang_thai_su_kien.png")
 
 
-# ================================================================= H6 tuần tự
 def fig_sequence():
     fig, ax = new_ax(11.5, 6.4)
     objs = [("Camera", 8), ("Bộ trích\nkhung xương", 24), ("Bộ phân loại\nST-GCN", 41),
@@ -361,7 +348,6 @@ def fig_sequence():
     save(fig, "h06_tuan_tu_canh_bao.png")
 
 
-# =================================================================== H7 lớp
 def uml_class(ax, x, y, w, title, attrs, fc=FILL, ec=NAVY, fs=7.2):
     hh, lh = 5.2, 3.1
     ah = lh * len(attrs) + 1.8
@@ -445,12 +431,10 @@ def fig_class():
     vlink(c_lt, c_tb, "1", "0..*", "gửi tới", 14)
     vlink(c_kq, c_sk, "1..*", "0..1", "kích hoạt", 50)
 
-    # Camera – VungQuanSat: định tuyến vòng bên phải
     path(ax, [(C3 + W3, 12), (99, 12), (99, R3 + 10), (C3 + W3, R3 + 10)],
          color=NAVY, lw=1.3, head=False)
     ax.text(99, (12 + R3 + 10) / 2, "khai báo\n1 → 0..*", fontsize=7, color=NAVY,
             ha="center", rotation=90, bbox=dict(fc="white", ec="none", pad=0.6))
-    # PhienGiamSat – KetQuaNhanDang
     ax.plot([C3, C2 + W2], [R2 + 12, R3 + 8], color=NAVY, lw=1.3, zorder=1)
     ax.text(68, 51, "sinh ra   1 → 0..*", fontsize=7, color=NAVY, ha="center",
             bbox=dict(fc="white", ec="none", pad=0.6))
@@ -459,7 +443,6 @@ def fig_class():
     save(fig, "h07_so_do_lop.png")
 
 
-# ============================================================== H8 thành phần
 def fig_component():
     fig, ax = new_ax(11.5, 6.4)
     ax.add_patch(Rectangle((2, 10), 58, 82, fc="#FBFDFE", ec=NAVY, lw=2, zorder=0))
@@ -507,7 +490,6 @@ def fig_component():
     save(fig, "h08_thanh_phan.png")
 
 
-# ================================================================= H9 dữ liệu
 def fig_data():
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.0))
 
@@ -552,7 +534,6 @@ def fig_data():
     save(fig, "h09_du_lieu.png")
 
 
-# =============================================================== H10 pipeline
 def fig_pipeline():
     fig, ax = new_ax(12, 3.0, ylim=(0, 88))
     steps = [
@@ -579,7 +560,6 @@ def fig_pipeline():
     save(fig, "h10_pipeline_du_lieu.png")
 
 
-# ============================================================== H11 triển khai
 def fig_deploy():
     fig, ax = new_ax(11, 4.6)
     box(ax, 2, 26, 24, 30, "«thiết bị»\nCamera IP\n\nRTSP / H.264\n1–2 chiếc mỗi phòng",

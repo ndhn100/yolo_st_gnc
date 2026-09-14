@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f7f9" />
+    <meta name="description" content="Tải video lên và phân tích hành vi té ngã bằng YOLO-Pose và ST-GCN." />
+    <title>FallSense · Phát hiện té ngã</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="/static/app.js" defer></script>
+    <script src="/static/camera.js" defer></script>
+  </head>
+  <body>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4m-4 4 4-4 4 4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></symbol>
+      <symbol id="icon-video" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="m17 10 4-3v10l-4-3"/></symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+      <symbol id="icon-scan" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3M8 12h8m-4-4v8"/></symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 8v5m0 4h.01M10.3 3.8 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></symbol>
+      <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24"><path d="M20 8a9 9 0 1 0 .1 8M20 3v5h-5"/></symbol>
+    </svg>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="FallSense — Trang chủ">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 8h7M7 8v16m0-8h7m4-8h7m-7 0v8h7v8h-7"/></svg></span>
+          <span>Fall<span class="brand-soft">Sense</span></span>
+        </a>
+        <div class="header-divider" aria-hidden="true"></div>
+        <span class="header-description">Nhận diện chuyển động. Phát hiện té ngã.</span>
+        <div class="system-status" id="systemStatus" role="status"><span class="status-dot"></span><span id="systemStatusText">Đang kết nối mô hình</span></div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro" aria-labelledby="pageTitle">
+        <div class="intro-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span>PHÂN TÍCH VIDEO</div>
+          <h1 id="pageTitle">Phát hiện té ngã<br /><span>từ những chuyển động.</span></h1>
+          <p>Bật camera để theo dõi trực tiếp hoặc tải video lên<br class="desktop-break" /> để phát hiện té ngã với YOLO-Pose + ST-GCN.</p>
+        </div>
+        <aside class="model-card" aria-label="Thông tin mô hình đang sử dụng">
+          <div class="model-card-top"><span class="model-icon"><svg class="icon"><use href="#icon-scan"/></svg></span><div><span class="small-label">MÔ HÌNH PHÂN TÍCH</span><strong>YOLO-Pose <span class="model-plus">+</span> ST-GCN</strong></div></div>
+          <div class="model-details"><div><span>Checkpoint</span><strong id="modelCheckpoint">Đang tải…</strong></div><div><span>F1 trên tập validation</span><strong id="modelF1">—</strong></div></div>
+          <p class="model-message" id="modelMessage" hidden></p>
+          <button class="text-button" id="modelRetry" type="button" hidden>Thử kết nối lại <svg class="icon"><use href="#icon-refresh"/></svg></button>
+        </aside>
+      </section>
+
+      <section class="panel camera-panel" aria-labelledby="cameraTitle">
+        <div class="panel-heading"><div class="heading-label"><span class="step-number"><svg class="icon"><use href="#icon-video"/></svg></span><h2 id="cameraTitle">Camera trực tiếp</h2></div><div class="camera-actions"><button class="primary-button" id="cameraStart" type="button">Bật camera</button><button class="secondary-button" id="cameraStop" type="button" disabled>Tắt camera</button><button class="text-button" id="cameraSound" type="button" aria-pressed="false" disabled>Tắt tiếng báo</button></div></div>
+        <div class="camera-body">
+          <div class="camera-stage stopped" id="cameraStage"><img id="cameraPreview" alt="Hình ảnh trực tiếp từ camera với khung xương người đang theo dõi" hidden /><span class="camera-live-badge" id="cameraLiveBadge" hidden><span></span> TRỰC TIẾP</span><div class="camera-status" id="cameraStatus" role="status" aria-live="polite" aria-atomic="true">Camera đang tắt</div></div>
+          <p class="camera-note" id="cameraNote">Bật camera để bắt đầu theo dõi. Hình ảnh được xử lý trên máy và không lưu thành video.</p>
+          <p class="camera-upload-note" id="cameraUploadNote" hidden>Tắt camera khi bạn muốn chuyển sang phân tích video tải lên.</p>
+        </div>
+      </section>
+
+      <div class="workspace" id="uploadWorkspace">
+        <section class="panel source-panel" aria-labelledby="sourceTitle">
+          <div class="panel-heading"><div class="heading-label"><span class="step-number">01</span><h2 id="sourceTitle">Video của bạn</h2></div><span class="panel-kicker">VIDEO ĐẦU VÀO</span></div>
+          <div class="source-content">
+            <input id="fileInput" class="visually-hidden" type="file" accept=".mp4,.mov,.avi,.mkv,.webm,.m4v" aria-label="Chọn video để phân tích" />
+            <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Chọn video hoặc kéo thả video vào đây" aria-describedby="uploadLimits">
+              <div class="upload-art" aria-hidden="true"><div class="upload-art-back"></div><div class="upload-art-front"><svg class="icon"><use href="#icon-upload"/></svg></div><span class="upload-art-spark spark-one"></span><span class="upload-art-spark spark-two"></span></div>
+              <h3>Kéo &amp; thả video vào đây</h3>
+              <p>hoặc chọn video từ thiết bị của bạn</p>
+              <span class="browse-button">Chọn video <svg class="icon"><use href="#icon-arrow"/></svg></span>
+              <div class="file-formats">MP4 <span>·</span> MOV <span>·</span> AVI <span>·</span> MKV <span>·</span> WEBM <span>·</span> M4V</div>
+              <span class="upload-limits" id="uploadLimits">Tối đa 250 MB · 10 phút / video</span>
+            </div>
+            <div class="preview-wrap" id="previewWrap" hidden>
+              <div class="video-stage"><video id="videoPreview" controls preload="metadata" playsinline aria-label="Xem trước video đã chọn"></video><span class="preview-badge"><span></span> VIDEO GỐC</span></div>
+              <p class="preview-warning" id="previewWarning" hidden>Trình duyệt không phát được định dạng này. Bạn vẫn có thể phân tích video.</p>
+              <div class="selected-file"><span class="file-icon"><svg class="icon"><use href="#icon-video"/></svg></span><div class="file-info"><strong id="fileName"></strong><span id="fileMeta"></span></div><button class="icon-button" id="resetButton" type="button" aria-label="Xóa video và kết quả, chọn video khác" title="Chọn video khác"><svg class="icon"><use href="#icon-refresh"/></svg></button></div>
+            </div>
+            <div class="error-message" id="uploadError" role="alert" hidden></div>
+            <div class="source-footer"><p><svg class="icon"><use href="#icon-lock"/></svg><span>Video được xử lý trên máy này.</span></p><button class="primary-button" id="analyzeButton" type="button" disabled><span id="analyzeButtonText">Phân tích video</span><svg class="icon"><use href="#icon-arrow"/></svg></button></div>
+          </div>
+        </section>
+
+        <section class="panel result-panel" aria-labelledby="resultTitle" aria-busy="false" id="resultPanel">
+          <div class="panel-heading"><div class="heading-label"><span class="step-number">02</span><h2 id="resultTitle">Kết quả phân tích</h2></div><span class="result-badge" id="resultBadge">CHƯA PHÂN TÍCH</span></div>
+          <div class="result-content">
+            <div class="empty-result" id="emptyResult"><div class="empty-icon"><svg class="icon"><use href="#icon-scan"/></svg><span class="empty-orbit"></span></div><h3>Chờ video của bạn</h3><p>Kết luận sẽ xuất hiện tại đây sau khi<br /> video được phân tích.</p><div class="empty-details"><div><span class="mini-check">1</span>Nhận diện tư thế trong video</div><div><span class="mini-check">2</span>Phân tích chuyển động theo thời gian</div><div><span class="mini-check">3</span>Kết luận &amp; đánh dấu thời điểm</div></div></div>
+
+            <div class="processing-result" id="processingResult" hidden>
+              <div class="processing-icon"><svg class="icon"><use href="#icon-scan"/></svg></div><h3>Đang phân tích video</h3><p id="processingStage" role="status" aria-live="polite">Đang tải video lên…</p><div class="progress-heading"><span>Tiến trình xử lý</span><strong id="progressValue">0%</strong></div><div class="progress-track" id="progressTrack" role="progressbar" aria-label="Tiến trình phân tích video" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressFill"></div></div><p class="processing-note">Thời gian xử lý phụ thuộc vào độ dài video và thiết bị. Vui lòng giữ trang này mở.</p>
+            </div>
+
+            <div class="completed-result" id="completedResult" hidden>
+              <div class="verdict" id="verdict"><span class="verdict-icon"><svg class="icon"><use id="verdictIcon" href="#icon-check"/></svg></span><div><span class="small-label">KẾT LUẬN</span><h3 id="verdictLabel"></h3></div></div>
+              <p class="verdict-summary" id="verdictSummary"></p>
+              <div class="score-row"><div><span class="metric-label">Sự kiện té ngã được mô hình xác nhận</span><strong class="score-value" id="confirmedEvents">—</strong></div></div>
+              <p class="decision-explanation" id="decisionExplanation"></p>
+              <div class="events-section"><div class="section-label"><h4>Sự kiện đã xác nhận</h4><span class="event-count" id="eventCount">0</span></div><div class="event-list" id="eventList"></div></div>
+              <details class="model-diagnostics">
+                <summary>Xem điểm mô hình theo từng đoạn</summary>
+                <p class="score-explanation">Đây là điểm đầu ra cho từng đoạn khoảng 1,8 giây, trên thang 0–100. Điểm này chưa được hiệu chuẩn thành xác suất té ngã thực tế của cả video; một đoạn có điểm cao vẫn có thể bị dự đoán nhầm.</p>
+                <div class="score-row diagnostic-scores"><div><span class="metric-label">Điểm cao nhất của một đoạn</span><strong id="maxProbability">—</strong></div><div class="threshold-metric"><span class="metric-label">Ngưỡng xét một đoạn</span><strong id="thresholdValue">—</strong></div></div>
+                <div class="timeline-section"><div class="section-label"><h4>Diễn biến theo thời gian</h4><span class="chart-legend"><span></span>Điểm mô hình</span></div><div class="timeline-chart" id="timelineChart" aria-label="Biểu đồ điểm mô hình theo thời gian"></div><p class="chart-caption" id="chartCaption">Mỗi điểm ở cuối một đoạn phân tích. Đường nét đứt là ngưỡng xét từng đoạn.</p></div>
+                <button class="secondary-button" id="peakReviewButton" type="button" hidden></button>
+              </details>
+              <div class="analysis-stats" id="analysisStats"></div>
+              <div class="result-warnings" id="resultWarnings" hidden></div>
+              <p class="result-note">Kết quả phản ánh dự đoán của mô hình. Hãy xem lại đoạn video được đánh dấu để xác nhận.</p>
+            </div>
+            <div class="failed-result" id="failedResult" hidden><div class="failure-icon"><svg class="icon"><use href="#icon-alert"/></svg></div><h3>Chưa thể hoàn tất phân tích</h3><p id="analysisError" role="alert"></p><button class="secondary-button" id="retryButton" type="button"><svg class="icon"><use href="#icon-refresh"/></svg>Thử phân tích lại</button></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="how-it-works" aria-label="Cách hoạt động"><div><span class="feature-icon"><svg class="icon"><use href="#icon-scan"/></svg></span><div><h3>Từ tư thế đến chuyển động</h3><p>YOLO-Pose trích xuất khung xương; ST-GCN phân tích chuỗi chuyển động để nhận diện té ngã.</p></div></div><div><span class="feature-icon"><svg class="icon"><use href="#icon-clock"/></svg></span><div><h3>Dễ dàng kiểm tra kết quả</h3><p>Chọn một mốc thời gian trong kết quả để tua video đến đoạn cần xem lại.</p></div></div></section>
+      <p class="retention-note"><svg class="icon"><use href="#icon-lock"/></svg>Video gốc được xóa sau khi xử lý. Ảnh minh họa được xóa khi đổi video hoặc tự động sau khoảng 1 giờ.</p>
+      <footer class="site-footer"><span>FallSense <span class="footer-separator">/</span> Video Fall Detection</span><span>YOLO-Pose + ST-GCN</span></footer>
+    </main>
+    <div class="visually-hidden" id="screenReaderStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>

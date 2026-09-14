@@ -1,10 +1,5 @@
-"""Bước 4: Đánh giá mô hình tốt nhất trên tập TEST (subject chưa từng thấy).
 
-Xuất: accuracy, precision, recall, F1, confusion matrix (png),
-độ chính xác theo từng loại hoạt động, độ trễ suy luận trung bình.
 
-Chạy:  python src/evaluate.py [--split test|val]
-"""
 import argparse
 import time
 
@@ -67,7 +62,6 @@ def main():
     print("Confusion matrix [hàng=thực tế, cột=dự đoán]:")
     print(cm)
 
-    # Độ chính xác theo từng hoạt động
     print("\nĐộ chính xác theo hoạt động:")
     for act in sorted(set(activities.tolist())):
         mask = activities == act
@@ -75,10 +69,9 @@ def main():
         print(f"  Activity {act:2d} ({ACTIVITY_NAMES.get(act, '?'):<28}): "
               f"{a:.3f}  ({mask.sum()} cửa sổ)")
 
-    # Độ trễ suy luận
     x1 = torch.from_numpy(X[:1]).to(device)
     for _ in range(10):
-        model(x1)  # warmup
+        model(x1)
     if device == "cuda":
         torch.cuda.synchronize()
     t0 = time.time()
@@ -90,7 +83,6 @@ def main():
     latency_ms = (time.time() - t0) / n_rep * 1000
     print(f"\nĐộ trễ suy luận ST-GCN: {latency_ms:.2f} ms/cửa sổ ({device})")
 
-    # Lưu confusion matrix png
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     try:
         import matplotlib
@@ -115,7 +107,6 @@ def main():
     except Exception as e:
         print(f"Không vẽ được confusion matrix: {e}")
 
-    # Lưu danh sách cửa sổ dự đoán sai để phân tích lỗi
     err_idx = np.where(y_pred != y)[0]
     if len(err_idx):
         import csv
